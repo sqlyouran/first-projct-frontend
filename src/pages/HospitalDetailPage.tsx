@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { fetchHospitalDetail } from '@/services/api'
-import type { HospitalDetail } from '@/types'
+import { fetchHospitalDetail, fetchPostsByHospital } from '@/services/api'
+import type { HospitalDetail, Post } from '@/types'
 
 export default function HospitalDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [hospital, setHospital] = useState<HospitalDetail | null>(null)
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
-    fetchHospitalDetail(Number(id))
-      .then(setHospital)
+    const numId = Number(id)
+    fetchHospitalDetail(numId)
+      .then((data) => {
+        setHospital(data)
+        return fetchPostsByHospital(numId, 0, 5)
+      })
+      .then((page) => setRelatedPosts(page.content))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [id])
@@ -84,6 +90,28 @@ export default function HospitalDetailPage() {
                   </span>
                   <span className="text-sm font-medium text-gray-800">{spec.specialtyName}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {relatedPosts.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">患者经验</h3>
+            <div className="space-y-3">
+              {relatedPosts.map((post) => (
+                <Link
+                  key={post.id}
+                  to={`/community/posts/${post.id}`}
+                  className="block p-3 bg-gray-50 rounded-md hover:bg-gray-100 no-underline"
+                >
+                  <h4 className="text-sm font-medium text-gray-800">{post.title}</h4>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                    <span>{post.authorNickname}</span>
+                    <span>👍 {post.likeCount}</span>
+                    <span>💬 {post.commentCount}</span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>

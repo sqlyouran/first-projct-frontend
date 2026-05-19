@@ -16,9 +16,14 @@ export default function Layout() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-blue-700 hover:text-blue-800 no-underline">
-            ChinaMedGuide
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" className="text-xl font-bold text-blue-700 hover:text-blue-800 no-underline">
+              ChinaMedGuide
+            </Link>
+            <Link to="/community" className="text-sm font-medium text-gray-600 hover:text-blue-600 no-underline">
+              交流
+            </Link>
+          </div>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"

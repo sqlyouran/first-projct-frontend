@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
-import { fetchSpecialtyRankings } from '@/services/api'
-import type { SpecialtyRanking } from '@/types'
+import { fetchSpecialtyRankings, fetchPostsBySpecialty } from '@/services/api'
+import type { SpecialtyRanking, Post } from '@/types'
 
 const CITIES = ['Beijing', 'Shanghai', 'Guangzhou', 'Chengdu', 'Wuhan', 'Hangzhou', "Xi'an", 'Changsha']
 
@@ -9,6 +9,7 @@ export default function SpecialtyRankingPage() {
   const { id } = useParams<{ id: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState<SpecialtyRanking | null>(null)
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -17,8 +18,15 @@ export default function SpecialtyRankingPage() {
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    fetchSpecialtyRankings(Number(id), cityFilter || undefined)
-      .then(setData)
+    const numId = Number(id)
+    Promise.all([
+      fetchSpecialtyRankings(numId, cityFilter || undefined),
+      fetchPostsBySpecialty(numId, 0, 5),
+    ])
+      .then(([rankData, postsPage]) => {
+        setData(rankData)
+        setRelatedPosts(postsPage.content)
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [id, cityFilter])
@@ -114,6 +122,28 @@ export default function SpecialtyRankingPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {relatedPosts.length > 0 && (
+        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">患者经验</h3>
+          <div className="space-y-3">
+            {relatedPosts.map((post) => (
+              <Link
+                key={post.id}
+                to={`/community/posts/${post.id}`}
+                className="block p-3 bg-gray-50 rounded-md hover:bg-gray-100 no-underline"
+              >
+                <h4 className="text-sm font-medium text-gray-800">{post.title}</h4>
+                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                  <span>{post.authorNickname}</span>
+                  <span>👍 {post.likeCount}</span>
+                  <span>💬 {post.commentCount}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>

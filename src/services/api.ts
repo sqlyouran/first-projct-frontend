@@ -1,4 +1,4 @@
-import type { Specialty, SpecialtyRanking, HospitalDetail, HospitalSummary, Page } from '@/types'
+import type { Specialty, SpecialtyRanking, HospitalDetail, HospitalSummary, Page, MockUser, Post, PostDetail, Comment, CreatePostRequest, CreateCommentRequest, InteractionResponse } from '@/types'
 
 const API_BASE = '/api'
 
@@ -34,4 +34,72 @@ export function fetchHospitals(query?: string, city?: string, specialty?: number
 
 export function fetchHospitalDetail(id: number): Promise<HospitalDetail> {
   return fetchJson(`${API_BASE}/hospitals/${id}`)
+}
+
+// Community Board APIs
+
+export function fetchMockUsers(): Promise<MockUser[]> {
+  return fetchJson(`${API_BASE}/mock-users`)
+}
+
+export function fetchPosts(sort = 'latest', page = 0, size = 10): Promise<Page<Post>> {
+  const params = new URLSearchParams()
+  params.set('sort', sort)
+  params.set('page', String(page))
+  params.set('size', String(size))
+  return fetchJson(`${API_BASE}/posts?${params.toString()}`)
+}
+
+export function fetchPostDetail(id: number): Promise<PostDetail> {
+  return fetchJson(`${API_BASE}/posts/${id}`)
+}
+
+export function fetchPostsByHospital(hospitalId: number, page = 0, size = 5): Promise<Page<Post>> {
+  return fetchJson(`${API_BASE}/posts/by-hospital/${hospitalId}?page=${page}&size=${size}`)
+}
+
+export function fetchPostsBySpecialty(specialtyId: number, page = 0, size = 5): Promise<Page<Post>> {
+  return fetchJson(`${API_BASE}/posts/by-specialty/${specialtyId}?page=${page}&size=${size}`)
+}
+
+export async function createPost(data: CreatePostRequest): Promise<PostDetail> {
+  const response = await fetch(`${API_BASE}/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+  return response.json()
+}
+
+export function fetchComments(postId: number): Promise<Comment[]> {
+  return fetchJson(`${API_BASE}/posts/${postId}/comments`)
+}
+
+export async function createComment(postId: number, data: CreateCommentRequest): Promise<Comment> {
+  const response = await fetch(`${API_BASE}/posts/${postId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+  return response.json()
+}
+
+export async function toggleLikePost(postId: number, userId: number): Promise<InteractionResponse> {
+  const response = await fetch(`${API_BASE}/posts/${postId}/like?userId=${userId}`, { method: 'POST' })
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+  return response.json()
+}
+
+export async function toggleFavoritePost(postId: number, userId: number): Promise<InteractionResponse> {
+  const response = await fetch(`${API_BASE}/posts/${postId}/favorite?userId=${userId}`, { method: 'POST' })
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+  return response.json()
+}
+
+export async function toggleLikeComment(commentId: number, userId: number): Promise<InteractionResponse> {
+  const response = await fetch(`${API_BASE}/comments/${commentId}/like?userId=${userId}`, { method: 'POST' })
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+  return response.json()
 }
