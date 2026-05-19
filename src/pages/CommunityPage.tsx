@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchPosts } from '@/services/api'
 import type { Post, Page } from '@/types'
+import { ThumbsUp, MessageCircle, PenSquare, Flame, Clock } from 'lucide-react'
 
 export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -27,94 +28,103 @@ export default function CommunityPage() {
   }
 
   function formatDate(dateStr: string) {
-    return new Date(dateStr).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">交流板块</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-text-primary">Community</h1>
         <Link
           to="/community/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium no-underline"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-hover text-sm font-medium no-underline transition-colors"
         >
-          发帖
+          <PenSquare className="w-4 h-4" />
+          New Post
         </Link>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      {/* Sort tabs */}
+      <div className="flex gap-2 mb-8">
         <button
           onClick={() => handleSortChange('latest')}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             sort === 'latest'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-primary text-white'
+              : 'bg-surface text-text-secondary hover:bg-primary-light hover:text-primary shadow-card'
           }`}
         >
-          最新
+          <Clock className="w-4 h-4" />
+          Latest
         </button>
         <button
           onClick={() => handleSortChange('hot')}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             sort === 'hot'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-primary text-white'
+              : 'bg-surface text-text-secondary hover:bg-primary-light hover:text-primary shadow-card'
           }`}
         >
-          最热
+          <Flame className="w-4 h-4" />
+          Hot
         </button>
       </div>
 
+      {/* Post list */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500">加载中...</div>
+        <div className="text-center py-20 text-text-muted">Loading...</div>
       ) : posts.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">暂无帖子</div>
+        <div className="text-center py-20 text-text-muted bg-surface rounded-2xl shadow-card">
+          No posts yet. Be the first to share!
+        </div>
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
             <Link
               key={post.id}
               to={`/community/posts/${post.id}`}
-              className="block bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow no-underline"
+              className="block bg-surface rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 p-6 transition-all duration-200 no-underline"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
-              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{post.contentPreview}</p>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1.5">
+              <h2 className="text-lg font-semibold text-text-primary mb-2">{post.title}</h2>
+              <p className="text-text-secondary text-sm mb-4 line-clamp-2">{post.contentPreview}</p>
+              <div className="flex items-center gap-4 text-sm text-text-muted">
+                <div className="flex items-center gap-2">
                   <img
                     src={post.authorAvatarUrl}
                     alt={post.authorNickname}
-                    className="w-5 h-5 rounded-full"
+                    className="w-6 h-6 rounded-full"
                   />
-                  <span>{post.authorNickname}</span>
+                  <span className="font-medium">{post.authorNickname}</span>
                 </div>
-                <span>👍 {post.likeCount}</span>
-                <span>💬 {post.commentCount}</span>
-                <span>{formatDate(post.createdAt)}</span>
+                <span className="flex items-center gap-1"><ThumbsUp className="w-3.5 h-3.5" /> {post.likeCount}</span>
+                <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {post.commentCount}</span>
+                <span className="ml-auto">{formatDate(post.createdAt)}</span>
               </div>
             </Link>
           ))}
         </div>
       )}
 
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-8">
+        <div className="flex justify-center items-center gap-3 mt-10">
           <button
             onClick={() => setPage(Math.max(0, page - 1))}
             disabled={page === 0}
-            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 disabled:opacity-50 hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-surface border border-border text-text-secondary hover:bg-primary-light hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            上一页
+            Previous
           </button>
-          <span className="px-3 py-1.5 text-sm text-gray-600">
+          <span className="px-4 py-2 text-sm text-text-muted">
             {page + 1} / {totalPages}
           </span>
           <button
             onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
             disabled={page >= totalPages - 1}
-            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 disabled:opacity-50 hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-surface border border-border text-text-secondary hover:bg-primary-light hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            下一页
+            Next
           </button>
         </div>
       )}

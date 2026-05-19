@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { fetchSpecialtyRankings, fetchPostsBySpecialty } from '@/services/api'
 import type { SpecialtyRanking, Post } from '@/types'
+import { ArrowLeft, Globe, ThumbsUp, MessageCircle } from 'lucide-react'
 
 const CITIES = ['Beijing', 'Shanghai', 'Guangzhou', 'Chengdu', 'Wuhan', 'Hangzhou', "Xi'an", 'Changsha']
 
@@ -40,34 +41,38 @@ export default function SpecialtyRankingPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-500">Loading rankings...</div>
+    return <div className="text-center py-20 text-text-muted">Loading rankings...</div>
   }
 
   if (error || !data) {
-    return <div className="text-center py-12 text-red-600">Failed to load rankings</div>
+    return <div className="text-center py-20 text-danger">Failed to load rankings</div>
   }
 
   return (
     <div>
-      <Link to="/" className="text-blue-600 hover:text-blue-800 text-sm mb-4 inline-block">
-        &larr; Back to Specialties
+      {/* Back navigation */}
+      <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary no-underline mb-6 transition-colors">
+        <ArrowLeft className="w-4 h-4" />
+        Back to Specialties
       </Link>
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+      {/* Page header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-text-primary mb-2">
           {data.specialty.icon} {data.specialty.name} Rankings
         </h1>
-        <p className="text-gray-500 mt-1">
-          Top hospitals for {data.specialty.name} ({data.specialty.nameCn}) in China - {data.year}
+        <p className="text-text-secondary">
+          Top hospitals for {data.specialty.name} ({data.specialty.nameCn}) in China — {data.year}
         </p>
       </div>
 
-      <div className="mb-6">
-        <label className="text-sm font-medium text-gray-700 mr-2">Filter by city:</label>
+      {/* City filter */}
+      <div className="mb-8">
+        <label className="text-sm font-medium text-text-secondary mr-3">Filter by city:</label>
         <select
           value={cityFilter}
           onChange={(e) => handleCityChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 bg-surface border border-border rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         >
           <option value="">All Cities</option>
           {CITIES.map((city) => (
@@ -76,46 +81,49 @@ export default function SpecialtyRankingPage() {
         </select>
       </div>
 
+      {/* Rankings table */}
       {data.rankings.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-12 text-text-muted bg-surface rounded-2xl shadow-card">
           No hospitals found for this filter.
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-2xl shadow-card overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-background/60">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rank</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Hospital</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">City</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">Int'l Dept</th>
+                <th className="px-5 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Rank</th>
+                <th className="px-5 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Hospital</th>
+                <th className="px-5 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">City</th>
+                <th className="px-5 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">Int'l Dept</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border-light">
               {data.rankings.map((entry) => (
-                <tr key={entry.rankPosition} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold ${
-                      entry.rankPosition <= 3 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
+                <tr key={entry.rankPosition} className="hover:bg-primary-light/30 transition-colors">
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                      entry.rankPosition <= 3 ? 'bg-accent-light text-accent' : 'bg-background text-text-secondary'
                     }`}>
                       {entry.rankPosition}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <Link
                       to={`/hospitals/${entry.hospital.id}`}
-                      className="text-blue-700 hover:text-blue-900 font-medium no-underline"
+                      className="text-primary hover:text-primary-hover font-medium no-underline transition-colors"
                     >
                       {entry.hospital.name}
                     </Link>
-                    <p className="text-xs text-gray-400 mt-0.5">{entry.hospital.nameCn}</p>
+                    <p className="text-xs text-text-muted mt-0.5">{entry.hospital.nameCn}</p>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">{entry.hospital.city}</td>
-                  <td className="px-4 py-3 hidden md:table-cell">
+                  <td className="px-5 py-4 text-sm text-text-secondary hidden md:table-cell">{entry.hospital.city}</td>
+                  <td className="px-5 py-4 hidden md:table-cell">
                     {entry.hospital.hasInternational ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary-light text-primary">
+                        <Globe className="w-3 h-3" /> Yes
+                      </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">No</span>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-background text-text-muted">No</span>
                     )}
                   </td>
                 </tr>
@@ -125,26 +133,27 @@ export default function SpecialtyRankingPage() {
         </div>
       )}
 
+      {/* Related posts */}
       {relatedPosts.length > 0 && (
-        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">患者经验</h3>
-          <div className="space-y-3">
+        <section className="mt-12">
+          <h3 className="text-lg font-semibold text-text-primary mb-4">Patient Experiences</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {relatedPosts.map((post) => (
               <Link
                 key={post.id}
                 to={`/community/posts/${post.id}`}
-                className="block p-3 bg-gray-50 rounded-md hover:bg-gray-100 no-underline"
+                className="block p-5 bg-surface rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 no-underline"
               >
-                <h4 className="text-sm font-medium text-gray-800">{post.title}</h4>
-                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                <h4 className="text-sm font-medium text-text-primary mb-2">{post.title}</h4>
+                <div className="flex items-center gap-3 text-xs text-text-muted">
                   <span>{post.authorNickname}</span>
-                  <span>👍 {post.likeCount}</span>
-                  <span>💬 {post.commentCount}</span>
+                  <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" /> {post.likeCount}</span>
+                  <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {post.commentCount}</span>
                 </div>
               </Link>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   )

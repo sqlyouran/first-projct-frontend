@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { fetchMockUsers, fetchHospitals, fetchSpecialties, createPost } from '@/services/api'
 import type { MockUser, HospitalSummary, Specialty } from '@/types'
+import { ArrowLeft, Send } from 'lucide-react'
 
 export default function NewPostPage() {
   const navigate = useNavigate()
@@ -44,7 +45,7 @@ export default function NewPostPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !content.trim()) {
-      setError('标题和内容不能为空')
+      setError('Title and content are required')
       return
     }
     setSubmitting(true)
@@ -59,7 +60,7 @@ export default function NewPostPage() {
       })
       navigate(`/community/posts/${result.id}`)
     } catch (err) {
-      setError('发帖失败，请重试')
+      setError('Failed to create post. Please try again.')
       console.error(err)
     } finally {
       setSubmitting(false)
@@ -68,24 +69,26 @@ export default function NewPostPage() {
 
   return (
     <div>
-      <Link to="/community" className="text-blue-600 hover:text-blue-800 text-sm mb-4 inline-block">
-        &larr; 返回交流板块
+      <Link to="/community" className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary no-underline mb-6 transition-colors">
+        <ArrowLeft className="w-4 h-4" />
+        Back to Community
       </Link>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">发布新帖</h1>
+      <div className="bg-surface rounded-2xl shadow-card p-8">
+        <h1 className="text-2xl font-bold text-text-primary mb-8">Create New Post</h1>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">{error}</div>
+          <div className="mb-6 p-4 bg-danger/5 border border-danger/20 text-danger rounded-xl text-sm">{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* User selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">发布身份</label>
+            <label className="block text-sm font-medium text-text-primary mb-2">Post as</label>
             <select
               value={userId}
               onChange={(e) => setUserId(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             >
               {mockUsers.map((u) => (
                 <option key={u.id} value={u.id}>{u.nickname}</option>
@@ -93,41 +96,44 @@ export default function NewPostPage() {
             </select>
           </div>
 
+          {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">标题</label>
+            <label className="block text-sm font-medium text-text-primary mb-2">Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="输入帖子标题"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Give your post a clear title..."
+              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               maxLength={200}
             />
           </div>
 
+          {/* Content */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">内容</label>
+            <label className="block text-sm font-medium text-text-primary mb-2">Content</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="分享你的就医经验..."
+              placeholder="Share your experience, ask a question, or start a discussion..."
               rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y transition-all"
             />
           </div>
 
+          {/* Hospital tags */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">关联医院（可选）</label>
+            <label className="block text-sm font-medium text-text-primary mb-3">Related Hospitals (optional)</label>
             <div className="flex flex-wrap gap-2">
               {hospitals.map((h) => (
                 <button
                   key={h.id}
                   type="button"
                   onClick={() => toggleHospital(h.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                     selectedHospitals.includes(h.id)
-                      ? 'bg-blue-100 border-blue-300 text-blue-700'
-                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                      ? 'bg-primary-light border-primary/30 text-primary'
+                      : 'bg-background border-border text-text-secondary hover:border-primary/30 hover:text-primary'
                   }`}
                 >
                   {h.nameCn || h.name}
@@ -136,18 +142,19 @@ export default function NewPostPage() {
             </div>
           </div>
 
+          {/* Specialty tags */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">关联专科（可选）</label>
+            <label className="block text-sm font-medium text-text-primary mb-3">Related Specialties (optional)</label>
             <div className="flex flex-wrap gap-2">
               {specialties.map((s) => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => toggleSpecialty(s.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                     selectedSpecialties.includes(s.id)
-                      ? 'bg-green-100 border-green-300 text-green-700'
-                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                      ? 'bg-accent-light border-accent/30 text-accent'
+                      : 'bg-background border-border text-text-secondary hover:border-accent/30 hover:text-accent'
                   }`}
                 >
                   {s.nameCn || s.name}
@@ -156,13 +163,15 @@ export default function NewPostPage() {
             </div>
           </div>
 
-          <div className="pt-2">
+          {/* Submit */}
+          <div className="pt-4">
             <button
               type="submit"
               disabled={submitting}
-              className="w-full px-4 py-2.5 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-primary text-white font-medium rounded-xl hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
-              {submitting ? '发布中...' : '发布帖子'}
+              <Send className="w-4 h-4" />
+              {submitting ? 'Publishing...' : 'Publish Post'}
             </button>
           </div>
         </form>
