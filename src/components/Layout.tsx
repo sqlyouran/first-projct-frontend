@@ -21,8 +21,8 @@ export default function Layout() {
   }
 
   const navLinks = [
-    { path: '/', label: '首页' },
-    { path: '/community', label: '交流' },
+    { path: '/', label: 'Home' },
+    { path: '/community', label: 'Community' },
   ]
 
   return (
