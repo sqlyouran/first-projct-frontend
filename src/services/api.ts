@@ -1,4 +1,4 @@
-import type { Specialty, SpecialtyRanking, HospitalDetail, HospitalSummary, Page, Post, PostDetail, Comment, CreatePostRequest, CreateCommentRequest, InteractionResponse, User, AuthResponse } from '@/types'
+import type { Specialty, SpecialtyRanking, HospitalDetail, HospitalSummary, Page, Post, PostDetail, Comment, CreatePostRequest, CreateCommentRequest, InteractionResponse, User, AuthResponse, Inquiry, CreateInquiryRequest } from '@/types'
 import { tokenStorage } from '../utils/tokenStorage'
 
 const API_BASE = '/api'
@@ -137,11 +137,12 @@ export function fetchHospitalDetail(id: number): Promise<HospitalDetail> {
 
 // ============ Community Board APIs ============
 
-export function fetchPosts(sort = 'latest', page = 0, size = 10): Promise<Page<Post>> {
+export function fetchPosts(sort = 'latest', page = 0, size = 10, type?: string): Promise<Page<Post>> {
   const params = new URLSearchParams()
   params.set('sort', sort)
   params.set('page', String(page))
   params.set('size', String(size))
+  if (type) params.set('type', type)
   return fetchJson(`${API_BASE}/posts?${params.toString()}`)
 }
 
@@ -228,4 +229,32 @@ export async function fetchMyFavorites(): Promise<Post[]> {
   if (!res.ok) throw new Error('Failed to fetch favorites')
   const data = await res.json()
   return data.content ?? data
+}
+
+// ============ Story APIs ============
+
+export async function createStory(data: Omit<CreatePostRequest, 'userId'>): Promise<PostDetail> {
+  const res = await authFetch(`${API_BASE}/posts`, {
+    method: 'POST',
+    body: JSON.stringify({ ...data, type: 'STORY' }),
+  })
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return res.json()
+}
+
+// ============ Inquiry APIs ============
+
+export async function createInquiry(data: CreateInquiryRequest): Promise<Inquiry> {
+  const res = await authFetch(`${API_BASE}/inquiries`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchMyInquiries(page = 0, size = 20): Promise<Page<Inquiry>> {
+  const res = await authFetch(`${API_BASE}/users/me/inquiries?page=${page}&size=${size}`)
+  if (!res.ok) throw new Error('Failed to fetch inquiries')
+  return res.json()
 }

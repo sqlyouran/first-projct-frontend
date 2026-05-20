@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { fetchHospitalDetail, fetchPostsByHospital } from '@/services/api'
 import type { HospitalDetail, Post } from '@/types'
-import { ArrowLeft, MapPin, Phone, ExternalLink, Globe, Award, ThumbsUp, MessageCircle } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, ExternalLink, Globe, Award, ThumbsUp, MessageCircle, Send } from 'lucide-react'
+import InquiryFormModal from '../components/InquiryFormModal'
 
 export default function HospitalDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [hospital, setHospital] = useState<HospitalDetail | null>(null)
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [inquiryOpen, setInquiryOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -23,6 +26,14 @@ export default function HospitalDetailPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [id])
+
+  // Auto-open inquiry modal from URL param
+  useEffect(() => {
+    if (searchParams.get('inquiry') === 'open' && hospital) {
+      setInquiryOpen(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, [hospital, searchParams, setSearchParams])
 
   if (loading) {
     return <div className="text-center py-20 text-text-muted">Loading hospital details...</div>
@@ -79,6 +90,13 @@ export default function HospitalDetailPage() {
                 Visit Website
               </a>
             )}
+            <button
+              onClick={() => setInquiryOpen(true)}
+              className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-hover transition-colors"
+            >
+              <Send className="w-4 h-4" />
+              Send Inquiry
+            </button>
           </div>
         </div>
 
@@ -122,7 +140,6 @@ export default function HospitalDetailPage() {
                 >
                   <h4 className="text-sm font-medium text-text-primary mb-2">{post.title}</h4>
                   <div className="flex items-center gap-3 text-xs text-text-muted">
-                    <span>{post.authorNickname}</span>
                     <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" /> {post.likeCount}</span>
                     <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {post.commentCount}</span>
                   </div>
@@ -132,6 +149,16 @@ export default function HospitalDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Inquiry Modal */}
+      {hospital && (
+        <InquiryFormModal
+          hospitalId={hospital.id}
+          hospitalName={hospital.name}
+          isOpen={inquiryOpen}
+          onClose={() => setInquiryOpen(false)}
+        />
+      )}
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fetchPostDetail, fetchComments, createComment, toggleLikePost, toggleFavoritePost, toggleLikeComment } from '@/services/api'
 import type { PostDetail, Comment as CommentType } from '@/types'
-import { ArrowLeft, ThumbsUp, Star, MessageCircle, Send, Hospital } from 'lucide-react'
+import { ArrowLeft, ThumbsUp, Star, MessageCircle, Send, Hospital, DollarSign, Clock, TrendingUp, Globe } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function PostDetailPage() {
@@ -97,6 +97,49 @@ export default function PostDetailPage() {
       {/* Post content card */}
       <div className="bg-surface rounded-2xl shadow-card p-8 mb-6">
         <h1 className="text-2xl font-bold text-text-primary mb-4">{post.title}</h1>
+
+        {/* Story structured summary */}
+        {post.type === 'STORY' && (post.conditionName || post.costRange || post.outcome || post.timelineDays) && (
+          <div className="mb-6 p-4 bg-primary/5 border border-primary/10 rounded-xl">
+            <div className="flex flex-wrap gap-3">
+              {post.conditionName && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface rounded-full text-xs font-medium text-text-primary shadow-sm">
+                  Condition: {post.conditionName}
+                </span>
+              )}
+              {post.treatmentType && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface rounded-full text-xs font-medium text-text-primary shadow-sm">
+                  Treatment: {post.treatmentType}
+                </span>
+              )}
+              {post.costRange && (
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                  <DollarSign className="w-3 h-3" />
+                  {post.costRange.replace('_', '-').replace('UNDER-', '<$').replace('OVER-', '>$').replace('K', 'K')}
+                </span>
+              )}
+              {post.outcome && (
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  <TrendingUp className="w-3 h-3" />
+                  {post.outcome.charAt(0) + post.outcome.slice(1).toLowerCase()}
+                </span>
+              )}
+              {post.timelineDays && (
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent-light text-accent rounded-full text-xs font-medium">
+                  <Clock className="w-3 h-3" />
+                  {post.timelineDays} days
+                </span>
+              )}
+              {post.nationality && (
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-surface rounded-full text-xs font-medium text-text-secondary shadow-sm">
+                  <Globe className="w-3 h-3" />
+                  {post.nationality}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mb-5 text-sm text-text-muted">
           <img src={post.authorAvatarUrl} alt={post.authorNickname} className="w-9 h-9 rounded-full" />
           <span className="font-medium text-text-secondary">{post.authorNickname}</span>

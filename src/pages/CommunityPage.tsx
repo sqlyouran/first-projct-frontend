@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchPosts } from '@/services/api'
 import type { Post, Page } from '@/types'
-import { ThumbsUp, MessageCircle, PenSquare, Flame, Clock } from 'lucide-react'
+import { ThumbsUp, MessageCircle, PenSquare, Flame, Clock, BookOpen } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import StoryCard from '../components/StoryCard'
 
 export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState<'latest' | 'hot'>('latest')
+  const [tab, setTab] = useState<'all' | 'stories'>('all')
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const navigate = useNavigate()
@@ -16,18 +18,27 @@ export default function CommunityPage() {
 
   useEffect(() => {
     setLoading(true)
-    fetchPosts(sort, page, 10)
+    const type = tab === 'stories' ? 'STORY' : undefined
+    fetchPosts(sort, page, 10, type)
       .then((data: Page<Post>) => {
         setPosts(data.content)
         setTotalPages(data.totalPages)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [sort, page])
+  }, [sort, page, tab])
 
   function handleSortChange(newSort: 'latest' | 'hot') {
     setSort(newSort)
     setPage(0)
+  }
+
+  function handleTabChange(newTab: 'all' | 'stories') {
+    setTab(newTab)
+    setPage(0)
+    if (newTab === 'stories') {
+      setSort('latest')
+    }
   }
 
   function formatDate(dateStr: string) {
@@ -39,12 +50,48 @@ export default function CommunityPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-text-primary">Community</h1>
+        <div className="flex gap-2">
+          {tab === 'stories' && (
+            <button
+              onClick={() => isAuthenticated ? navigate('/community/new-story') : navigate('/login')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl hover:bg-accent/90 text-sm font-medium transition-colors"
+            >
+              <BookOpen className="w-4 h-4" />
+              Share Your Story
+            </button>
+          )}
+          <button
+            onClick={() => isAuthenticated ? navigate('/community/new') : navigate('/login')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-hover text-sm font-medium transition-colors"
+          >
+            <PenSquare className="w-4 h-4" />
+            New Post
+          </button>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div className="flex gap-2 mb-6">
         <button
-          onClick={() => isAuthenticated ? navigate('/community/new') : navigate('/login')}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-hover text-sm font-medium transition-colors"
+          onClick={() => handleTabChange('all')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            tab === 'all'
+              ? 'bg-primary text-white'
+              : 'bg-surface text-text-secondary hover:bg-primary-light hover:text-primary shadow-card'
+          }`}
         >
-          <PenSquare className="w-4 h-4" />
-          New Post
+          All Posts
+        </button>
+        <button
+          onClick={() => handleTabChange('stories')}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            tab === 'stories'
+              ? 'bg-primary text-white'
+              : 'bg-surface text-text-secondary hover:bg-primary-light hover:text-primary shadow-card'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          Stories
         </button>
       </div>
 
@@ -54,7 +101,7 @@ export default function CommunityPage() {
           onClick={() => handleSortChange('latest')}
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             sort === 'latest'
-              ? 'bg-primary text-white'
+              ? 'bg-text-primary text-white'
               : 'bg-surface text-text-secondary hover:bg-primary-light hover:text-primary shadow-card'
           }`}
         >
@@ -65,7 +112,7 @@ export default function CommunityPage() {
           onClick={() => handleSortChange('hot')}
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             sort === 'hot'
-              ? 'bg-primary text-white'
+              ? 'bg-text-primary text-white'
               : 'bg-surface text-text-secondary hover:bg-primary-light hover:text-primary shadow-card'
           }`}
         >
@@ -79,7 +126,13 @@ export default function CommunityPage() {
         <div className="text-center py-20 text-text-muted">Loading...</div>
       ) : posts.length === 0 ? (
         <div className="text-center py-20 text-text-muted bg-surface rounded-2xl shadow-card">
-          No posts yet. Be the first to share!
+          {tab === 'stories' ? 'No patient stories yet. Be the first to share your experience!' : 'No posts yet. Be the first to share!'}
+        </div>
+      ) : tab === 'stories' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {posts.map((post) => (
+            <StoryCard key={post.id} story={post} />
+          ))}
         </div>
       ) : (
         <div className="space-y-4">
@@ -92,14 +145,6 @@ export default function CommunityPage() {
               <h2 className="text-lg font-semibold text-text-primary mb-2">{post.title}</h2>
               <p className="text-text-secondary text-sm mb-4 line-clamp-2">{post.contentPreview}</p>
               <div className="flex items-center gap-4 text-sm text-text-muted">
-                <div className="flex items-center gap-2">
-                  <img
-                    src={post.authorAvatarUrl}
-                    alt={post.authorNickname}
-                    className="w-6 h-6 rounded-full"
-                  />
-                  <span className="font-medium">{post.authorNickname}</span>
-                </div>
                 <span className="flex items-center gap-1"><ThumbsUp className="w-3.5 h-3.5" /> {post.likeCount}</span>
                 <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {post.commentCount}</span>
                 <span className="ml-auto">{formatDate(post.createdAt)}</span>

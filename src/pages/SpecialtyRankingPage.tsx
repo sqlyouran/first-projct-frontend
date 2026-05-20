@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { fetchSpecialtyRankings, fetchPostsBySpecialty } from '@/services/api'
 import type { SpecialtyRanking, Post } from '@/types'
-import { ArrowLeft, Globe, ThumbsUp, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Globe, ThumbsUp, MessageCircle, Send } from 'lucide-react'
 
 const CITIES = ['Beijing', 'Shanghai', 'Guangzhou', 'Chengdu', 'Wuhan', 'Hangzhou', "Xi'an", 'Changsha']
 
@@ -95,6 +95,7 @@ export default function SpecialtyRankingPage() {
                 <th className="px-5 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Hospital</th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">City</th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">Int'l Dept</th>
+                <th className="px-5 py-4 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-light">
@@ -125,6 +126,15 @@ export default function SpecialtyRankingPage() {
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-background text-text-muted">No</span>
                     )}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <Link
+                      to={`/hospitals/${entry.hospital.id}?inquiry=open`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary-hover transition-colors no-underline"
+                    >
+                      <Send className="w-3 h-3" />
+                      Inquire
+                    </Link>
                   </td>
                 </tr>
               ))}

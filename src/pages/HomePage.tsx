@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { fetchSpecialties } from '@/services/api'
-import type { Specialty } from '@/types'
+import { fetchSpecialties, fetchPosts } from '@/services/api'
+import type { Specialty, Post } from '@/types'
 import { Search, ArrowRight } from 'lucide-react'
+import StoryCard from '../components/StoryCard'
 
 export default function HomePage() {
   const [specialties, setSpecialties] = useState<Specialty[]>([])
+  const [featuredStories, setFeaturedStories] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [heroQuery, setHeroQuery] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchSpecialties()
-      .then(setSpecialties)
+    Promise.all([
+      fetchSpecialties(),
+      fetchPosts('hot', 0, 3, 'STORY'),
+    ])
+      .then(([specs, storiesPage]) => {
+        setSpecialties(specs)
+        setFeaturedStories(storiesPage.content)
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
@@ -64,6 +72,23 @@ export default function HomePage() {
           </form>
         </div>
       </section>
+
+      {/* Featured Stories */}
+      {featuredStories.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-text-primary">Patient Stories</h2>
+            <Link to="/community" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover no-underline transition-colors">
+              View all <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {featuredStories.map((story) => (
+              <StoryCard key={story.id} story={story} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Specialties Grid */}
       <section>

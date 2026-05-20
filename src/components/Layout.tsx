@@ -109,6 +109,7 @@ export default function Layout() {
                       <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-50 no-underline">Profile</Link>
                       <Link to="/my-posts" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-50 no-underline">My Posts</Link>
                       <Link to="/my-favorites" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-50 no-underline">My Favorites</Link>
+                      <Link to="/my-inquiries" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-50 no-underline">My Inquiries</Link>
                       <Link to="/change-password" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-50 no-underline">Change Password</Link>
                       <hr className="my-1 border-gray-100" />
                       <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">

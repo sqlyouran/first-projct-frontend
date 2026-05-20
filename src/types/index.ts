@@ -66,6 +66,10 @@ export interface Post {
   likeCount: number
   commentCount: number
   createdAt: string
+  type?: string
+  costRange?: string
+  outcome?: string
+  timelineDays?: number
 }
 
 export interface PostDetail {
@@ -80,6 +84,13 @@ export interface PostDetail {
   createdAt: string
   hospitals: { id: number; name: string }[]
   specialties: { id: number; name: string }[]
+  type?: string
+  conditionName?: string
+  treatmentType?: string
+  costRange?: string
+  timelineDays?: number
+  outcome?: string
+  nationality?: string
 }
 
 export interface Comment {
@@ -98,6 +109,13 @@ export interface CreatePostRequest {
   userId: number
   hospitalIds?: number[]
   specialtyIds?: number[]
+  type?: string
+  conditionName?: string
+  treatmentType?: string
+  costRange?: string
+  timelineDays?: number
+  outcome?: string
+  nationality?: string
 }
 
 export interface CreateCommentRequest {
@@ -139,4 +157,26 @@ export interface RegisterRequest {
   email: string
   password: string
   nickname: string
+}
+
+// Inquiry Types
+
+export interface Inquiry {
+  id: number
+  hospitalId: number
+  hospitalName: string
+  name: string
+  email: string
+  conditionSummary: string
+  preferredDate: string | null
+  status: 'PENDING' | 'CONTACTED' | 'CLOSED'
+  createdAt: string
+}
+
+export interface CreateInquiryRequest {
+  name: string
+  email: string
+  conditionSummary: string
+  preferredDate?: string
+  hospitalId: number
 }
