@@ -1,4 +1,5 @@
-import type { Specialty, SpecialtyRanking, HospitalDetail, HospitalSummary, Page, MockUser, Post, PostDetail, Comment, CreatePostRequest, CreateCommentRequest, InteractionResponse } from '@/types'
+import type { Specialty, SpecialtyRanking, HospitalDetail, HospitalSummary, Page, Post, PostDetail, Comment, CreatePostRequest, CreateCommentRequest, InteractionResponse, User, AuthResponse } from '@/types'
+import { tokenStorage } from '../utils/tokenStorage'
 
 const API_BASE = '/api'
 
@@ -9,6 +10,104 @@ async function fetchJson<T>(url: string): Promise<T> {
   }
   return response.json()
 }
+
+async function refreshToken(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: tokenStorage.getRefreshToken() }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      tokenStorage.setAccessToken(data.accessToken)
+      if (data.refreshToken) tokenStorage.setRefreshToken(data.refreshToken)
+      return true
+    }
+    tokenStorage.clear()
+    return false
+  } catch {
+    tokenStorage.clear()
+    return false
+  }
+}
+
+async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = tokenStorage.getAccessToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string> || {}),
+  }
+
+  let response = await fetch(url, { ...options, headers })
+
+  if (response.status === 401 && tokenStorage.getRefreshToken()) {
+    const refreshed = await refreshToken()
+    if (refreshed) {
+      headers.Authorization = `Bearer ${tokenStorage.getAccessToken()}`
+      response = await fetch(url, { ...options, headers })
+    }
+  }
+
+  return response
+}
+
+// ============ Auth APIs ============
+
+export async function loginApi(email: string, password: string): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { message?: string }).message || 'Login failed')
+  }
+  return res.json()
+}
+
+export async function registerApi(email: string, password: string, nickname: string): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, nickname }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { message?: string }).message || 'Registration failed')
+  }
+  return res.json()
+}
+
+export async function fetchCurrentUser(): Promise<User> {
+  const res = await authFetch(`${API_BASE}/auth/me`)
+  if (!res.ok) throw new Error('Failed to fetch current user')
+  return res.json()
+}
+
+export async function forgotPasswordApi(email: string): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  if (!res.ok) throw new Error('Failed to send reset email')
+  return res.json()
+}
+
+export async function resetPasswordApi(token: string, newPassword: string): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword }),
+  })
+  if (!res.ok) throw new Error('Failed to reset password')
+  return res.json()
+}
+
+// ============ Public APIs ============
 
 export function fetchSpecialties(): Promise<Specialty[]> {
   return fetchJson(`${API_BASE}/specialties`)
@@ -36,11 +135,7 @@ export function fetchHospitalDetail(id: number): Promise<HospitalDetail> {
   return fetchJson(`${API_BASE}/hospitals/${id}`)
 }
 
-// Community Board APIs
-
-export function fetchMockUsers(): Promise<MockUser[]> {
-  return fetchJson(`${API_BASE}/mock-users`)
-}
+// ============ Community Board APIs ============
 
 export function fetchPosts(sort = 'latest', page = 0, size = 10): Promise<Page<Post>> {
   const params = new URLSearchParams()
@@ -62,44 +157,75 @@ export function fetchPostsBySpecialty(specialtyId: number, page = 0, size = 5): 
   return fetchJson(`${API_BASE}/posts/by-specialty/${specialtyId}?page=${page}&size=${size}`)
 }
 
-export async function createPost(data: CreatePostRequest): Promise<PostDetail> {
-  const response = await fetch(`${API_BASE}/posts`, {
+export async function createPost(data: Omit<CreatePostRequest, 'userId'>): Promise<PostDetail> {
+  const res = await authFetch(`${API_BASE}/posts`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-  return response.json()
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return res.json()
 }
 
 export function fetchComments(postId: number): Promise<Comment[]> {
   return fetchJson(`${API_BASE}/posts/${postId}/comments`)
 }
 
-export async function createComment(postId: number, data: CreateCommentRequest): Promise<Comment> {
-  const response = await fetch(`${API_BASE}/posts/${postId}/comments`, {
+export async function createComment(postId: number, data: Omit<CreateCommentRequest, 'userId'>): Promise<Comment> {
+  const res = await authFetch(`${API_BASE}/posts/${postId}/comments`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-  return response.json()
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return res.json()
 }
 
-export async function toggleLikePost(postId: number, userId: number): Promise<InteractionResponse> {
-  const response = await fetch(`${API_BASE}/posts/${postId}/like?userId=${userId}`, { method: 'POST' })
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-  return response.json()
+export async function toggleLikePost(postId: number): Promise<InteractionResponse> {
+  const res = await authFetch(`${API_BASE}/posts/${postId}/like`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return res.json()
 }
 
-export async function toggleFavoritePost(postId: number, userId: number): Promise<InteractionResponse> {
-  const response = await fetch(`${API_BASE}/posts/${postId}/favorite?userId=${userId}`, { method: 'POST' })
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-  return response.json()
+export async function toggleFavoritePost(postId: number): Promise<InteractionResponse> {
+  const res = await authFetch(`${API_BASE}/posts/${postId}/favorite`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return res.json()
 }
 
-export async function toggleLikeComment(commentId: number, userId: number): Promise<InteractionResponse> {
-  const response = await fetch(`${API_BASE}/comments/${commentId}/like?userId=${userId}`, { method: 'POST' })
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-  return response.json()
+export async function toggleLikeComment(commentId: number): Promise<InteractionResponse> {
+  const res = await authFetch(`${API_BASE}/comments/${commentId}/like`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return res.json()
+}
+
+// ============ User Profile APIs ============
+
+export async function updateProfile(nickname: string, avatarUrl?: string): Promise<User> {
+  const res = await authFetch(`${API_BASE}/users/me`, {
+    method: 'PUT',
+    body: JSON.stringify({ nickname, avatarUrl }),
+  })
+  if (!res.ok) throw new Error('Failed to update profile')
+  return res.json()
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await authFetch(`${API_BASE}/users/me/password`, {
+    method: 'PUT',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+  if (!res.ok) throw new Error('Incorrect current password')
+}
+
+export async function fetchMyPosts(): Promise<Post[]> {
+  const res = await authFetch(`${API_BASE}/users/me/posts`)
+  if (!res.ok) throw new Error('Failed to fetch posts')
+  const data = await res.json()
+  return data.content ?? data
+}
+
+export async function fetchMyFavorites(): Promise<Post[]> {
+  const res = await authFetch(`${API_BASE}/users/me/favorites`)
+  if (!res.ok) throw new Error('Failed to fetch favorites')
+  const data = await res.json()
+  return data.content ?? data
 }

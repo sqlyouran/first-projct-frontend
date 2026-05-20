@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fetchPostDetail, fetchComments, createComment, toggleLikePost, toggleFavoritePost, toggleLikeComment } from '@/services/api'
 import type { PostDetail, Comment as CommentType } from '@/types'
 import { ArrowLeft, ThumbsUp, Star, MessageCircle, Send, Hospital } from 'lucide-react'
-
-const MOCK_USER_ID = 1
+import { useAuth } from '../contexts/AuthContext'
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const [post, setPost] = useState<PostDetail | null>(null)
   const [comments, setComments] = useState<CommentType[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,18 +30,21 @@ export default function PostDetailPage() {
 
   async function handleLikePost() {
     if (!post) return
-    const result = await toggleLikePost(post.id, MOCK_USER_ID)
+    if (!isAuthenticated) { navigate('/login'); return }
+    const result = await toggleLikePost(post.id)
     setPost({ ...post, likeCount: result.likeCount ?? post.likeCount })
   }
 
   async function handleFavoritePost() {
     if (!post) return
-    const result = await toggleFavoritePost(post.id, MOCK_USER_ID)
+    if (!isAuthenticated) { navigate('/login'); return }
+    const result = await toggleFavoritePost(post.id)
     setPost({ ...post, favoriteCount: result.favoriteCount ?? post.favoriteCount })
   }
 
   async function handleLikeComment(commentId: number) {
-    await toggleLikeComment(commentId, MOCK_USER_ID)
+    if (!isAuthenticated) { navigate('/login'); return }
+    await toggleLikeComment(commentId)
     if (id) {
       const updated = await fetchComments(Number(id))
       setComments(updated)
@@ -49,11 +53,14 @@ export default function PostDetailPage() {
 
   async function handleSubmitComment() {
     if (!id || !commentText.trim()) return
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
     setSubmitting(true)
     try {
       await createComment(Number(id), {
         content: commentText.trim(),
-        userId: MOCK_USER_ID,
         parentId: replyTo?.id ?? null,
       })
       setCommentText('')
@@ -135,6 +142,11 @@ export default function PostDetailPage() {
 
         {/* Comment input */}
         <div className="mb-8">
+          {!isAuthenticated && (
+            <div className="mb-4 p-3 bg-teal-50 border border-teal-200 text-teal-700 rounded-xl text-sm">
+              <Link to="/login" className="font-medium underline hover:text-teal-800">Sign in</Link> to leave a comment.
+            </div>
+          )}
           {replyTo && (
             <div className="flex items-center gap-2 mb-2 text-sm text-text-muted">
               <span>Replying to {replyTo.nickname}</span>

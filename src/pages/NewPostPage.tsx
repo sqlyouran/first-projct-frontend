@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { fetchMockUsers, fetchHospitals, fetchSpecialties, createPost } from '@/services/api'
-import type { MockUser, HospitalSummary, Specialty } from '@/types'
+import { fetchHospitals, fetchSpecialties, createPost } from '@/services/api'
+import type { HospitalSummary, Specialty } from '@/types'
 import { ArrowLeft, Send } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function NewPostPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [userId, setUserId] = useState<number>(0)
   const [selectedHospitals, setSelectedHospitals] = useState<number[]>([])
   const [selectedSpecialties, setSelectedSpecialties] = useState<number[]>([])
-  const [mockUsers, setMockUsers] = useState<MockUser[]>([])
   const [hospitals, setHospitals] = useState<HospitalSummary[]>([])
   const [specialties, setSpecialties] = useState<Specialty[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -19,12 +19,9 @@ export default function NewPostPage() {
 
   useEffect(() => {
     Promise.all([
-      fetchMockUsers(),
       fetchHospitals(undefined, undefined, undefined, 0, 100),
       fetchSpecialties(),
-    ]).then(([users, hospitalPage, specs]) => {
-      setMockUsers(users)
-      if (users.length > 0) setUserId(users[0].id)
+    ]).then(([hospitalPage, specs]) => {
       setHospitals(hospitalPage.content)
       setSpecialties(specs)
     })
@@ -54,7 +51,6 @@ export default function NewPostPage() {
       const result = await createPost({
         title: title.trim(),
         content: content.trim(),
-        userId,
         hospitalIds: selectedHospitals.length > 0 ? selectedHospitals : undefined,
         specialtyIds: selectedSpecialties.length > 0 ? selectedSpecialties : undefined,
       })
@@ -77,25 +73,28 @@ export default function NewPostPage() {
       <div className="bg-surface rounded-2xl shadow-card p-8">
         <h1 className="text-2xl font-bold text-text-primary mb-8">Create New Post</h1>
 
+        {/* Author info */}
+        {user && (
+          <div className="flex items-center gap-3 mb-6 p-4 bg-background rounded-xl border border-border">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.nickname} className="w-9 h-9 rounded-full object-cover" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-medium">
+                {user.nickname?.[0]?.toUpperCase()}
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-text-primary">{user.nickname}</p>
+              <p className="text-xs text-text-muted">Posting as yourself</p>
+            </div>
+          </div>
+        )}
+        
         {error && (
           <div className="mb-6 p-4 bg-danger/5 border border-danger/20 text-danger rounded-xl text-sm">{error}</div>
         )}
-
+        
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* User selector */}
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">Post as</label>
-            <select
-              value={userId}
-              onChange={(e) => setUserId(Number(e.target.value))}
-              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            >
-              {mockUsers.map((u) => (
-                <option key={u.id} value={u.id}>{u.nickname}</option>
-              ))}
-            </select>
-          </div>
-
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">Title</label>

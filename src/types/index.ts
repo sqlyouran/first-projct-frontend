@@ -57,12 +57,6 @@ export interface Page<T> {
 
 // Community Board Types
 
-export interface MockUser {
-  id: number
-  nickname: string
-  avatarUrl: string
-}
-
 export interface Post {
   id: number
   title: string
@@ -117,4 +111,32 @@ export interface InteractionResponse {
   favorited?: boolean
   likeCount?: number
   favoriteCount?: number
+}
+
+// Auth Types
+
+export interface User {
+  id: number
+  email: string
+  nickname: string
+  avatarUrl: string | null
+  role: 'USER' | 'ADMIN'
+  createdAt: string
+}
+
+export interface AuthResponse {
+  accessToken: string
+  refreshToken: string
+  user: User
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface RegisterRequest {
+  email: string
+  password: string
+  nickname: string
 }

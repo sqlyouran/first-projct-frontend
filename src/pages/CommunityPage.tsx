@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { fetchPosts } from '@/services/api'
 import type { Post, Page } from '@/types'
 import { ThumbsUp, MessageCircle, PenSquare, Flame, Clock } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -10,6 +11,8 @@ export default function CommunityPage() {
   const [sort, setSort] = useState<'latest' | 'hot'>('latest')
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
     setLoading(true)
@@ -36,13 +39,13 @@ export default function CommunityPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-text-primary">Community</h1>
-        <Link
-          to="/community/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-hover text-sm font-medium no-underline transition-colors"
+        <button
+          onClick={() => isAuthenticated ? navigate('/community/new') : navigate('/login')}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-hover text-sm font-medium transition-colors"
         >
           <PenSquare className="w-4 h-4" />
           New Post
-        </Link>
+        </button>
       </div>
 
       {/* Sort tabs */}
