@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { fetchSpecialtyRankings, fetchPostsBySpecialty } from '@/services/api'
 import type { SpecialtyRanking, Post } from '@/types'
 import { ArrowLeft, Globe, ThumbsUp, MessageCircle, Send } from 'lucide-react'
@@ -50,6 +51,18 @@ export default function SpecialtyRankingPage() {
 
   return (
     <div>
+      <Helmet>
+        <title>Top {data.specialty.name} Hospitals in China | ChinaMedGuide</title>
+        <meta name="description" content={`Compare the best ${data.specialty.name} hospitals in China. View rankings, international departments, and submit inquiries.`} />
+        <meta property="og:title" content={`Top ${data.specialty.name} Hospitals | ChinaMedGuide`} />
+        <meta property="og:description" content={`Find top-ranked ${data.specialty.name} hospitals in China.`} />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "MedicalSpecialty",
+          "name": data.specialty.name
+        })}</script>
+      </Helmet>
       {/* Back navigation */}
       <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary no-underline mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" />

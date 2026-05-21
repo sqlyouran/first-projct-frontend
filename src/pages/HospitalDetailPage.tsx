@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { fetchHospitalDetail, fetchPostsByHospital } from '@/services/api'
 import type { HospitalDetail, Post } from '@/types'
 import { ArrowLeft, MapPin, Phone, ExternalLink, Globe, Award, ThumbsUp, MessageCircle, Send } from 'lucide-react'
@@ -45,6 +46,20 @@ export default function HospitalDetailPage() {
 
   return (
     <div>
+      <Helmet>
+        <title>{hospital.name} | ChinaMedGuide</title>
+        <meta name="description" content={`${hospital.name} in ${hospital.city} — international department, specialties, and patient inquiries.`} />
+        <meta property="og:title" content={`${hospital.name} | ChinaMedGuide`} />
+        <meta property="og:description" content={`Find details about ${hospital.name} in ${hospital.city}.`} />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Hospital",
+          "name": hospital.name,
+          "address": { "@type": "PostalAddress", "streetAddress": hospital.address, "addressLocality": hospital.city, "addressRegion": hospital.province },
+          ...(hospital.phone ? { "telephone": hospital.phone } : {})
+        })}</script>
+      </Helmet>
       <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary no-underline mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Back to Specialties

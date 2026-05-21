@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { fetchPosts } from '@/services/api'
 import type { Post, Page } from '@/types'
 import { ThumbsUp, MessageCircle, PenSquare, Flame, Clock, BookOpen } from 'lucide-react'
@@ -47,6 +48,13 @@ export default function CommunityPage() {
 
   return (
     <div>
+      <Helmet>
+        <title>Community — Patient Stories & Discussions | ChinaMedGuide</title>
+        <meta name="description" content="Join the ChinaMedGuide community. Read patient journey stories, share experiences, and discuss healthcare options for foreigners in China." />
+        <meta property="og:title" content="Community — Patient Stories & Discussions | ChinaMedGuide" />
+        <meta property="og:description" content="Read patient stories and discuss healthcare options for foreigners in China." />
+        <meta property="og:type" content="website" />
+      </Helmet>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-text-primary">Community</h1>

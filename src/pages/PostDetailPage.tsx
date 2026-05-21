@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { fetchPostDetail, fetchComments, createComment, toggleLikePost, toggleFavoritePost, toggleLikeComment } from '@/services/api'
 import type { PostDetail, Comment as CommentType } from '@/types'
 import { ArrowLeft, ThumbsUp, Star, MessageCircle, Send, Hospital, DollarSign, Clock, TrendingUp, Globe } from 'lucide-react'
@@ -89,6 +90,13 @@ export default function PostDetailPage() {
 
   return (
     <div>
+      <Helmet>
+        <title>{post.title} | ChinaMedGuide Community</title>
+        <meta name="description" content={post.content.slice(0, 150)} />
+        <meta property="og:title" content={`${post.title} | ChinaMedGuide Community`} />
+        <meta property="og:description" content={post.content.slice(0, 150)} />
+        <meta property="og:type" content="article" />
+      </Helmet>
       <Link to="/community" className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary no-underline mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Back to Community

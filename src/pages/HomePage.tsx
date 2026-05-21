@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { fetchSpecialties, fetchPosts } from '@/services/api'
 import type { Specialty, Post } from '@/types'
 import { Search, ArrowRight } from 'lucide-react'
@@ -43,6 +44,13 @@ export default function HomePage() {
 
   return (
     <div>
+      <Helmet>
+        <title>ChinaMedGuide — Find English-Friendly Hospitals in China</title>
+        <meta name="description" content="Discover top-rated hospitals in China with English-speaking staff. Read patient stories, compare specialties, and submit inquiries to international departments." />
+        <meta property="og:title" content="ChinaMedGuide — Find English-Friendly Hospitals in China" />
+        <meta property="og:description" content="Discover top-rated hospitals in China with English-speaking staff." />
+        <meta property="og:type" content="website" />
+      </Helmet>
       {/* Hero Section */}
       <section className="relative -mx-4 sm:-mx-6 lg:-mx-8 -mt-10 mb-12 px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-gradient-to-br from-primary-light via-background to-accent-light">
         <div className="max-w-3xl mx-auto text-center">
